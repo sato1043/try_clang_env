@@ -15,8 +15,8 @@ TDEPS := $(TSRCS:%.c=%.d)
 
 .PHONY: release debug all check clean test
 
-CFLAGS := -std=c17 -Weverything
-CFLAGS_D :=-O0 -DDEBUG -g
+CFLAGS := -std=c17 -Wall -Wextra -pedantic -Wstrict-overflow -fno-strict-aliasing -Wno-missing-field-initializers
+CFLAGS_D :=-O0 -DDEBUG -g -Werror -Wshadow
 CFLAGS_R :=-O2 -DNDEBUG
 
 LDFLAGS :=
@@ -39,8 +39,11 @@ CC := clang
 $(TARGET): $(OBJS)
 	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJS)
 
+run: $(TARGET)
+	valgrind --leak-check=full --show-leak-kinds=all ./$(TARGET)
+
 test: $(TARGET).cunit
-	./$(TARGET).cunit
+	valgrind --leak-check=full --show-leak-kinds=all ./$(TARGET).cunit
 
 $(TARGET).cunit: $(TOBJS)
 	$(CC) $(LDFLAGS) -lcunit -o $(TARGET).cunit $(TOBJS)
@@ -52,7 +55,8 @@ check:
 	@for src in $(SRCS) ; do \
 		clang-format -i "$$src" ; \
 		cppcheck --enable=all --check-config "$$src" ; \
+		clang-tidy "$$src" -checks=-*,clang-analyzer-*,-clang-analyzer-cplusplus* ; ¥
 	done
 
 clean:
-	-rm -rf $(DEPS) $(OBJS) $(TDEPS) $(TOBJS) $(TARGET) $(TARGET).dSYM $(TARGET).cunit
+	-rm -rf $(DEPS) $(OBJS) $(TDEPS) $(TOBJS) $(TARGET) $(TARGET).dSYM $(TARGET).cunit $(TARGET).cunit.dSYM
