@@ -36,7 +36,7 @@ CC := clang
 .c.o:
 	$(CC) -MMD -MP $(CFLAGS) -c $<
 
-$(TARGET): $(OBJS)
+$(TARGET): tags check $(OBJS)
 	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJS)
 
 run: $(TARGET)
@@ -48,17 +48,19 @@ time: $(TARGET)
 test: $(TARGET).cunit
 	valgrind --leak-check=full --show-leak-kinds=all ./$(TARGET).cunit
 
-$(TARGET).cunit: $(TOBJS)
+$(TARGET).cunit: tags check $(TOBJS)
 	$(CC) $(LDFLAGS) -lcunit -o $(TARGET).cunit $(TOBJS)
 
 dSYM: $(TARGET)
 	dsymutil $(TARGET)
 
+tags:
+	gtags -v
+
 check:
 	@for src in $(SRCS) ; do \
 		clang-format -i "$$src" ; \
 		cppcheck --enable=all --check-config "$$src" ; \
-		clang-tidy "$$src" -checks=-*,clang-analyzer-*,-clang-analyzer-cplusplus* ; ¥
 	done
 
 clean:
