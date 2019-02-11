@@ -19,7 +19,7 @@ CFLAGS := -std=c17 -Wall -Wextra -pedantic -Wstrict-overflow -fno-strict-aliasin
 CFLAGS_D :=-O0 -DDEBUG -g -Werror -Wshadow
 CFLAGS_R :=-O2 -DNDEBUG
 
-LDFLAGS :=
+LDFLAGS :=-ltcmalloc
 LDFLAGS_D :=-g -debug
 LDFLAGS_R :=
 
@@ -41,6 +41,9 @@ $(TARGET): $(OBJS)
 
 run: $(TARGET)
 	valgrind --leak-check=full --show-leak-kinds=all ./$(TARGET)
+
+time: $(TARGET)
+	time ./$(TARGET)
 
 test: $(TARGET).cunit
 	valgrind --leak-check=full --show-leak-kinds=all ./$(TARGET).cunit
